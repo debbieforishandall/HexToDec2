@@ -117,24 +117,37 @@ sub $v0, $zero, $t7			# Initialize $v0 to -1
 li $t0, 48							# Initialize lower bound for the ascii range 0 - 9
 li $t2, 58							# Initialize upper bound the ascii range 0 - 9
 add $t3, $t0, $zero			# t3 is the value to be subtracted from the ascii value to get its value in hex
-j l
 
-li $t0, 65							# Initialize lower bound for the ascii range A - F
+l1: bne $a0, $t0, ne1 	# a0 is the ascii value, t0 is the lower bound of the ascii range to be checked
+sub $v0, $t0, $t3				# t3 is the value to be subtracted from the ascii value to get its value in hex
+jr $ra
+ne1: addi $t0, $t0, 1
+bne $t0, $t2, nne1			# t2 is the upper bound of the ascii range plus 1
+j label1								# Hex value not in range, try next range
+nne1: j l1
+
+label1: li $t0, 65			# Initialize lower bound for the ascii range A - F
 li $t2, 71							# Initialize upper bound for the ascii range A - F
 addi $t4, $zero, 10			# Set temporary variable to 10
-sub $t3, $a1, $t4				# t3 is the value to be subtracted from the ascii value to get its value in hex
-j l
+sub $t3, $t0, $t4				# t3 is the value to be subtracted from the ascii value to get its value in hex
 
-li $t0, 97							# Initialize lower bound for the for the ascii range a - f
+l2: bne $a0, $t0, ne2 	# a0 is the ascii value, t0 is the lower bound of the ascii range to be checked
+sub $v0, $t0, $t3				# t3 is the value to be subtracted from the ascii value to get its value in hex
+jr $ra
+ne2: addi $t0, $t0, 1
+bne $t0, $t2, nne2			# t2 is the upper bound of the ascii range plus 1
+j label2								# Hex value not in range, try next range
+nne2: j l2
+
+label2: li $t0, 97			# Initialize lower bound for the for the ascii range a - f
 li $t2, 103							# Initialize upper bound for the ascii range a - f
 addi $t4, $zero, 10			# Set temporary variable to 10
-sub $t3, $a1, $t4				# t3 is the value to be subtracted from the ascii value to get its value in hex
-j  l
+sub $t3, $t0, $t4				# t3 is the value to be subtracted from the ascii value to get its value in hex
 
-l: bne $a0, $t0, ne 		# a0 is the ascii value, a1 is the lower bound of the ascii range to be checked
-sub $v0, $a0, $t3				# t3 is the value to be subtracted from the ascii value to get its value in hex
-jr $ra
-ne: addi $t0, $t0, 1
-bne $t0, $t2, nne				# a2 is the upper bound of the ascii range plus 1
-jr $ra
-nne: j l
+l3: bne $a0, $t0, ne3 	# a0 is the ascii value, t0 is the lower bound of the ascii range to be checked
+sub $v0, $t0, $t3				# t3 is the value to be subtracted from the ascii value to get its value in hex
+jr $ra									# Return the decimal value
+ne3: addi $t0, $t0, 1
+bne $t0, $t2, nne3			# t2 is the upper bound of the ascii range plus 1
+jr $ra									# Invalid hex value, return
+nne3: j l3
