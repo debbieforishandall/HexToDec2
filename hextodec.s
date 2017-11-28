@@ -89,7 +89,7 @@ syscall
 # Function returns decimal value of an hexadecimal string
 #
 # Arg registers used: $a0
-# Tmp registers used: $t0, $t2, $t3, $t4, $t7
+# Tmp registers used: $t0, $t1, $t2, $t3, $t4, $t7
 #
 # Pre: none
 # Post: $v0 contains the return value
@@ -97,6 +97,48 @@ syscall
 #
 # Called by: main
 # Calls: hex_funct
+add $t4, $a0, $zero			# Load address from argument
+lbu $t2, 0($t4)					# Load character at $s1
+addi $t1, $zero, 0			# initialize counter $t1 to zero
+
+sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
+bne $t2, $t7, loop					# If not space branch to loop
+addi $t4, $t4, 1
+lbu $t2, 0($t4)
+j sp
+
+loop: 
+add $a0, $zero,  $t2		# Initialize values for function: hex_funct
+
+jal hex_funct
+addi $t7, $zero, 1			# Set temporary variable to 1
+sub $t3, $zero, $t7			# Set temporary variable to -1
+bne $v0, $t3, valid			# Check whether $v0 is not equal to -1
+
+li $v0, 4								# Print error string, the input character is not a hex value
+la $a0, error
+syscall
+li $v0, 10 							# Exit Program
+syscall
+
+valid: add $t0, $v0, $zero
+bne $t1,$zero, else
+j both
+else: sll $s0, $s0, 4   # 
+both: add $s0, $s0, $t0
+
+addi $t1, $t1, 1
+
+addi $s1, $s1, 1
+lbu $t2, 0($s1)
+beq $t2, $zero, finish 				# Exit loop when next character in string is null
+addi $t8, $zero, 10
+beq $t2, $t8, finish					# Exit loop when next character in string is enter
+j loop
+
+finish:
+jr $ra
+
 
 ########################################hex_funct
 # Function returns decimal value of a single hexadecimal value using ascii ranges
