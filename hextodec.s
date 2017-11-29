@@ -15,45 +15,10 @@ li $a1, 9							# of size 9
 syscall
 
 la $s1, str
-lbu $t2, 0($s1)					# Load character at $s1
-addi $t1, $zero, 0			# initialize counter $t1 to zero
 
-sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
-bne $t2, $t7, loop					# If not space branch to loop
-addi $s1, $s1, 1
-lbu $t2, 0($s1)
-j sp
-
-loop: 
-add $a0, $zero,  $t2		# Initialize values for function: hex_funct
-
-jal hex_funct
-addi $t4, $zero, 1			# Set temporary variable to 1
-sub $t3, $zero, $t4			# Set temporary variable to -1
-bne $v0, $t3, valid			# Check whether $v0 is not equal to -1
-
-li $v0, 4								# Print error string, the input character is not a hex value
-la $a0, error
-syscall
-li $v0, 10 							# Exit Program
-syscall
-
-valid: add $t0, $v0, $zero
-bne $t1,$zero, else
-j both
-else: sll $s0, $s0, 4   # 
-both: add $s0, $s0, $t0
-
-addi $t1, $t1, 1
-
-addi $s1, $s1, 1
-lbu $t2, 0($s1)
-beq $t2, $zero, finish 				# Exit loop when next character in string is null
-addi $t8, $zero, 10
-beq $t2, $t8, finish					# Exit loop when next character in string is enter
-j loop
-
-finish:
+add $a0, $s1, $zero					# Add address of string to argument
+jal hex_string
+add $s0, $v0, $zero					# Get the return value
 
 #li $v0, 1								# Print integer value
 #add $a0, $s0, $zero			# in $s0
@@ -63,18 +28,18 @@ la $s3, buffer
 addi $t7, $zero, 0
 sb $t7, 8($s3)					# Null terminate the buffer string
 
-addi $s3, $s3, 8
+addi $s3, $s3, 8				# Start from the end of the buffer string
 
 stringloop: addi $t6, $zero, 1
-sub $s3, $s3, $t6
+sub $s3, $s3, $t6				# Subtract 1 from s3
 addi $t6, $zero, 10
 divu $s0, $t6					# Divide the decimal in $s0 by 10
 mfhi $t7							# Put the remainder in $t7
 mflo $s0							# Put the quotient in $s0
 addi $t7, $t7, 48 		# Convert decimal in $t7 to ascii
-sb $t7, 0($s3)   			# store character at $s3
+sb $t7, 0($s3)   			# store remainder in $s3
 
-bne $s0, $zero, stringloop
+bne $s0, $zero, stringloop		# Continue looping until quotient is 0
 
 finalexit: 
 
@@ -89,7 +54,7 @@ syscall
 # Function returns decimal value of an hexadecimal string
 #
 # Arg registers used: $a0
-# Tmp registers used: $t0, $t2, $t3, $t4, $t7
+# Tmp registers used: $t0, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9
 #
 # Pre: none
 # Post: $v0 contains the return value
@@ -97,6 +62,52 @@ syscall
 #
 # Called by: main
 # Calls: hex_funct
+hex_string:
+add $t9, $a0, $zero			# Load address of string from argument
+lbu $t2, 0($t9)					# Load character at $t9
+addi $t1, $zero, 0			# initialize counter $t1 to zero
+
+sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
+bne $t2, $t7, loop					# If not space branch to loop
+addi $t9, $t9, 1				
+lbu $t2, 0($t9)				# Load the nextr charcter
+j sp						# Repeat until character is no space
+loop: 
+add $a0, $zero,  $t2		# Initialize values for function: hex_funct
+
+add $t5, $ra, $zero 		# Store the value in $ra into $t5
+jal hex_funct
+addi $t7, $zero, 1			# Set temporary variable to 1
+sub $t3, $zero, $t7			# Set temporary variable to -1
+bne $v0, $t3, valid			# Check whether $v0 is not equal to -1
+
+li $v0, 4								# Print error string, the input character is not a hex value
+la $a0, error
+syscall
+li $v0, 10 							# Exit Program
+syscall
+
+valid: add $t0, $v0, $zero
+bne $t1,$zero, else
+j both
+else: sll $t6, $t6, 4   # Shift register that stores the decimal number by 4
+both: add $t6, $t6, $t0	# Add the new decimal returned by hex_funct to the number
+
+addi $t1, $t1, 1		# Update the counter
+
+addi $t9, $t9, 1
+lbu $t2, 0($t9)			# Load the next  character
+beq $t2, $zero, finish 				# Exit loop when next character in string is null
+addi $t8, $zero, 10
+beq $t2, $t8, finish					# Exit loop when next character in string is enter
+j loop
+
+finish:
+add $v0, $t6, $zero		# store the return value in v0
+
+add $ra, $t5, $zero		# Reload $ra from t5
+jr $ra
+
 
 ########################################hex_funct
 # Function returns decimal value of a single hexadecimal value using ascii ranges
