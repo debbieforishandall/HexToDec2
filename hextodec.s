@@ -3,7 +3,7 @@
 .data
 str: .space 9
 error: .asciiz "Invalid hexadecimal number."
-buffer: .space 11
+buffer: .space 11	# buffer string to store decimal string
 
 .text
 main:
@@ -70,36 +70,36 @@ addi $t1, $zero, 0			# initialize counter $t1 to zero
 sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
 bne $t2, $t7, loop					# If not space branch to loop
 addi $t9, $t9, 1				
-lbu $t2, 0($t9)				# Load the nextr charcter
-j sp						# Repeat until character is no space
-loop: 
-add $a0, $zero,  $t2		# Initialize values for function: hex_funct
+lbu $t2, 0($t9)				# Load the next charcter
+j sp						# Repeat until character is not space
 
+loop: 
 add $t5, $ra, $zero 		# Store the value in $ra into $t5
+add $a0, $zero,  $t2		# Initialize values for function: hex_funct
 jal hex_funct
 addi $t7, $zero, 1			# Set temporary variable to 1
 sub $t3, $zero, $t7			# Set temporary variable to -1
 bne $v0, $t3, valid			# Check whether $v0 is not equal to -1
 
-li $v0, 4								# Print error string, the input character is not a hex value
+li $v0, 4					# Print error string, the input character is not a hex value
 la $a0, error
 syscall
-li $v0, 10 							# Exit Program
+li $v0, 10 					# Exit Program
 syscall
 
 valid: add $t0, $v0, $zero
-bne $t1,$zero, else
+bne $t1, $zero, else		# If it's the first number, don't shift the register
 j both
-else: sll $t6, $t6, 4   # Shift register that stores the decimal number by 4
-both: add $t6, $t6, $t0	# Add the new decimal returned by hex_funct to the number
+else: sll $t6, $t6, 4   	# Shift register that stores the decimal number by 4
+both: add $t6, $t6, $t0		# Add the new decimal returned by hex_funct to the number
 
-addi $t1, $t1, 1		# Update the counter
+addi $t1, $t1, 1			# Update the counter
 
 addi $t9, $t9, 1
-lbu $t2, 0($t9)			# Load the next  character
-beq $t2, $zero, finish 				# Exit loop when next character in string is null
+lbu $t2, 0($t9)				# Load the next  character
+beq $t2, $zero, finish 		# Exit loop when next character in string is null
 addi $t8, $zero, 10
-beq $t2, $t8, finish					# Exit loop when next character in string is enter
+beq $t2, $t8, finish		# Exit loop when next character in string is enter
 j loop
 
 finish:
