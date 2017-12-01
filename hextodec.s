@@ -2,26 +2,84 @@
 # of an hexadecimal number specified by user input
 .data
 str: .space 9
-newstr: .space 1000
+str2: .space 1000
 error: .asciiz "Invalid hexadecimal number."
+comma_string: .asciiz ","
+nan: .asciiz "NaN"
+large: .asciiz "too large"
 buffer: .space 11	# buffer string to store decimal string
 
 .text
 main:
 addi $s0, $zero, 0    			# Initialize $s0
 
-li $v0, 8 						# Read in hexadecimal number
-la $a0, str
-li $a1, 9						# of size 9 
+li $v0, 8 						# Read in hexadecimal numbers
+la $a0, str2
+li $a1, 1000					# of size 1000 
 syscall
 
-la $s1, str
+la $s4, str2					# Load address of str2
 
-add $a0, $s1, $zero				# Add address of string to argument
-jal hex_string					# Covert hexadecimal string to decimal
-jal print_decimal				# Print decimal
+li $v0, 1  						
+add $a0, $s4, $zero
+syscall
+
+li $v0, 4 						
+la $a0, error
+syscall
+
+addi $s6, $zero, 0				# Initialize check $s6
+
+anotherloop:
+add $s5, $s4, $zero				# Copy the address of str2 to $s5
+
+li $v0, 1  						
+add $a0, $s5, $zero
+syscall
+
+lbu $t3, 0($s5)					# Load character at $s5
+bne $t3, $zero, checkenter		# Exit loop if the null character is encountered
+j continue
+checkenter:
+addi $t7, $zero, 10 
+bne $t3, $t7, innerloop			# Exit loop if enter character is encountered
+j continue
+
+innerloop:
+lbu $t3, 0($s5)					# Load character at $s5 --
+addi $t7, $zero, 44				# Load the ascii value of comma for comparison
+addi $t6, $zero, 10				# Load the ascii value of enter for comparison
+bne $t3, $t6, notenter			# Check if the ascii value is enter
+addi $s6, $zero, 1				# Add a check to indicate that enter character denoting end of input has been encountered
+j equalenter
+notenter:
+bne $t3, $zero, notzero			# Check if the ascii value is zero
+addi $s6, $zero, 1				# Add a check to indicate that zero denoting end of input has been encountered
+j equalenter
+notzero:
+bne $t3, $t7, notcomma			# Check if the ascii value is comma
+equalenter: 
+add $a0, $s4, $zero				# Add address of string to argument for hex_string function
+jal hex_string					# Call function to convert hexadecimal string to integer
 lw $s0, 0($sp)					# Copy return value from stack to $s0
 addi $sp, $sp, 4				# Increment stack pointer by 4
+jal print_decimal 				# Print decimal string
+
+# Print comma
+li $v0, 4 						
+la $a0, comma_string
+syscall
+
+addi $s4, $s5, 1
+j anotherloop
+notcomma:
+addi $s5, $s5, 1				# Check the next value
+j innerloop	
+
+continue:						# Exit anotherloop
+#Exit program ideally
+
+
 
 li $v0, 10 						# Exit Program
 syscall
