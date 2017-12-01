@@ -66,6 +66,7 @@ hex_string:
 add $t9, $a0, $zero			# Load address of string from argument
 lbu $t2, 0($t9)					# Load character at $t9
 addi $t1, $zero, 0			# initialize counter $t1 to zero
+add $t5, $ra, $zero 		# Store the value in $ra into $t5
 
 sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
 bne $t2, $t7, loop					# If not space branch to loop
@@ -74,7 +75,6 @@ lbu $t2, 0($t9)				# Load the next charcter
 j sp						# Repeat until character is not space
 
 loop: 
-add $t5, $ra, $zero 		# Store the value in $ra into $t5
 add $a0, $zero,  $t2		# Initialize values for function: hex_funct
 jal hex_funct
 addi $t7, $zero, 1			# Set temporary variable to 1
