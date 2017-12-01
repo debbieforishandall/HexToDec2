@@ -18,7 +18,8 @@ la $s1, str
 
 add $a0, $s1, $zero					# Add address of string to argument
 jal hex_string
-add $s0, $v0, $zero					# Get the return value
+lw $s0, 0($sp)						# Copy return value from stack to $s0
+addi $sp, $sp, 4					# Increment stack pointer by 4
 
 #li $v0, 1								# Print integer value
 #add $a0, $s0, $zero			# in $s0
@@ -57,7 +58,7 @@ syscall
 # Tmp registers used: $t0, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9
 #
 # Pre: none
-# Post: $v0 contains the return value
+# Post: 0($sp) contains the return value
 # Returns: the value of the hex, -1 if not valid
 #
 # Called by: main
@@ -103,7 +104,8 @@ beq $t2, $t8, finish		# Exit loop when next character in string is enter
 j loop
 
 finish:
-add $v0, $t6, $zero		# store the return value in v0
+addi $sp, $sp, -4			# Decrement stack pointer by 4
+sw $t6, 0($sp)				# Copy $t6 to stack
 
 add $ra, $t5, $zero		# Reload $ra from t5
 jr $ra
