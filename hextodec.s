@@ -136,7 +136,7 @@ jr $ra							# Exit function
 #
 # Pre: none
 # Post: 0($sp) contains the return value
-# Returns: the value of the hex, -1 if not valid
+# Returns: the value of the hex, -1 if not valid, -2 if too large
 #
 # Called by: main
 # Calls: hex_funct
@@ -146,7 +146,24 @@ lbu $t2, 0($t9)					# Load character at $t9
 addi $t1, $zero, 0				# initialize counter $t1 to zero
 add $t5, $ra, $zero 			# Store the value in $ra into $t5
 
-sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7			
+sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7
+addi $t7, $zero, 44				# Store 44 - ascii comma in $t7
+bne $t2, $t7, notcomma1			# Check if comma
+gotofinish:
+addi $t7, $zero, 1
+sub $t6, $zero, $t7				# the input character is not a hex value, set return value to -1
+j finish						# exit subfunction
+
+notcomma1:
+addi $t7, $zero, 10				# Store 10 - ascii enter in $t7
+bne $t2, $t7, notenter1			# Check if enter
+j gotofinish
+
+notenter1:
+bne $t2, $zero, notnull1			# Check if null
+j gotofinish
+
+notnull1:
 bne $t2, $t7, loop				# If not space branch to loop
 addi $t9, $t9, 1				
 lbu $t2, 0($t9)					# Load the next charcter
@@ -159,11 +176,9 @@ addi $t7, $zero, 1				# Set temporary variable to 1
 sub $t3, $zero, $t7				# Set temporary variable to -1
 bne $v0, $t3, valid				# Check whether $v0 is not equal to -1
 
-li $v0, 4						# Print error string, the input character is not a hex value
-la $a0, error
-syscall
-li $v0, 10 						# Exit Program
-syscall
+addi $t7, $zero, 1
+sub $t6, $zero, $t7				# the input character is not a hex value, set return value to -1
+j finish						# exit subfunction
 
 valid: add $t0, $v0, $zero
 bne $t1, $zero, else			# If it's the first number, don't shift the register
