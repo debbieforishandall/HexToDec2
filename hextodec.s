@@ -231,6 +231,7 @@ jr $ra
 hex_funct:	
 addi $t7, $zero, 1								
 sub $v0, $zero, $t7				# Initialize $v0 to -1
+addi $t6, $zero, 0				# Initialize $t6 to 0
 
 li $t0, 48						# Initialize lower bound for the ascii range 0 - 9
 li $t2, 58						# Initialize upper bound the ascii range 0 - 9
