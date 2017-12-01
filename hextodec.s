@@ -20,22 +20,10 @@ syscall
 
 la $s4, str2					# Load address of str2
 
-li $v0, 1  						
-add $a0, $s4, $zero
-syscall
-
-li $v0, 4 						
-la $a0, error
-syscall
-
 addi $s6, $zero, 0				# Initialize check $s6
 
 anotherloop:
 add $s5, $s4, $zero				# Copy the address of str2 to $s5
-
-li $v0, 1  						
-add $a0, $s5, $zero
-syscall
 
 lbu $t3, 0($s5)					# Load character at $s5
 bne $t3, $zero, checkenter		# Exit loop if the null character is encountered
@@ -62,10 +50,30 @@ equalenter:
 add $a0, $s4, $zero				# Add address of string to argument for hex_string function
 jal hex_string					# Call function to convert hexadecimal string to integer
 lw $s0, 0($sp)					# Copy return value from stack to $s0
-addi $sp, $sp, 4				# Increment stack pointer by 4
+
+addi $t8, $zero, 1				# Check that returned value is not NaN
+sub  $t7, $zero, $t8
+bne $s0, $t7, notnan
+li $v0, 4 						
+la $a0, nan						# Print NaN if so
+syscall
+addi $s4, $s5, 1
+j anotherloop
+
+notnan:							# Check that returned value is not too large
+bne $s0, $t7, nottoolarge
+li $v0, 4 						
+la $a0, large					# Print too large if so
+syscall
+addi $s4, $s5, 1
+j anotherloop
+ 
+nottoolarge:
+#addi $sp, $sp, 4				# Increment stack pointer by 4
 jal print_decimal 				# Print decimal string
 
 # Print comma
+print_comma:
 li $v0, 4 						
 la $a0, comma_string
 syscall
@@ -78,8 +86,6 @@ j innerloop
 
 continue:						# Exit anotherloop
 #Exit program ideally
-
-
 
 li $v0, 10 						# Exit Program
 syscall
