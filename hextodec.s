@@ -58,6 +58,7 @@ li $v0, 4
 la $a0, nan						# Print NaN if so
 syscall
 # Print comma
+bne $s6, $zero, continue		# Don't print comma after last input
 li $v0, 4 						
 la $a0, comma_string
 syscall
@@ -71,6 +72,7 @@ la $a0, large					# Print too large if so
 syscall
 
 # Print comma
+bne $s6, $zero, continue		# Don't print comma after last input
 li $v0, 4 						
 la $a0, comma_string
 syscall
@@ -84,6 +86,7 @@ jal print_decimal 				# Print decimal string
 
 # Print comma
 print_comma:
+bne $s6, $zero, continue		# Don't print comma after last input
 li $v0, 4 						
 la $a0, comma_string
 syscall
