@@ -15,73 +15,13 @@ la $a0, str
 li $a1, 9						# of size 9 
 syscall
 
-li $v0, 8 						# Read in hexadecimal numbers
-la $a0, newstr
-li $a1, 1000					# of size 1000 
-syscall
-
-la $s4, newstr					# Load address of newstr
-anotherloop:
-add $t4, $s4, $zero				# Copy the address of newstr to $t4
-lbu $t3, 0($t4)					# Load character at $t4
-bne $t3, $zero, checkenter		# Exit loop if the null character is encountered
-j continue
-checkenter:
-addi $t7, $zero, 10 
-bne $t3, $t7, innerloop			# Exit loop if enter character is encountered
-j continue
-
-innerloop:
-lbu $t3, 0($t4)					# Load character at $t4
-addi $t7, $zero, 44				# Load the ascii value of comma for comparison
-bne $t3, $t7, notcomma			# Check if the ascii value is comma
-add $a0, $s4, $zero				# Add address of string to argument for hex_string function
-jal hex_string					# Call function to convert hexadecimal string to integer
-lw $s0, 0($sp)					# Copy return value from stack to $s0
-addi $sp, $sp, 4				# Increment stack pointer by 4
-# Print string
-# Print comma
-j anotherloop
-notcomma:
-addi $t3, $t3, 1				# Check the next value
-j innerloop
-
-continue:						# Exit anotherloop
-#Exit program ideally
-
 la $s1, str
 
 add $a0, $s1, $zero				# Add address of string to argument
-jal hex_string
+jal hex_string					# Covert hexadecimal string to decimal
+jal print_decimal				# Print decimal
 lw $s0, 0($sp)					# Copy return value from stack to $s0
 addi $sp, $sp, 4				# Increment stack pointer by 4
-
-#li $v0, 1						# Print integer value
-#add $a0, $s0, $zero			# in $s0
-#syscall
-
-la $s3, buffer
-addi $t7, $zero, 0
-sb $t7, 8($s3)					# Null terminate the buffer string
-
-addi $s3, $s3, 8				# Start from the end of the buffer string
-
-stringloop: addi $t6, $zero, 1
-sub $s3, $s3, $t6				# Subtract 1 from s3
-addi $t6, $zero, 10
-divu $s0, $t6					# Divide the decimal in $s0 by 10
-mfhi $t7						# Put the remainder in $t7
-mflo $s0						# Put the quotient in $s0
-addi $t7, $t7, 48 				# Convert decimal in $t7 to ascii
-sb $t7, 0($s3)   				# store remainder in $s3
-
-bne $s0, $zero, stringloop		# Continue looping until quotient is 0
-
-finalexit: 
-
-li $v0, 4  						# Print string
-la $a0, 0($s3)
-syscall
 
 li $v0, 10 						# Exit Program
 syscall
@@ -98,6 +38,7 @@ syscall
 #
 # Called by: main
 # Calls: none
+print_decimal:
 la $t0, buffer
 
 lw $t2, 0($sp)					# Copy argument from stack
@@ -113,13 +54,13 @@ addi $t0, $t0, 8				# Start from the end of the buffer string
 stringloop: addi $t6, $zero, 1
 sub $t0, $t0, $t6				# Subtract 1 from s3
 addi $t6, $zero, 10
-divu $s0, $t6					# Divide the decimal in $s0 by 10
+divu $t2, $t6					# Divide the decimal in $t2 by 10
 mfhi $t7						# Put the remainder in $t7
-mflo $s0						# Put the quotient in $s0
+mflo $t2						# Put the quotient in $t2
 addi $t7, $t7, 48 				# Convert decimal in $t7 to ascii
-sb $t7, 0($t0)   				# store remainder in $s3
+sb $t7, 0($t0)   				# store remainder in $t0
 
-bne $s0, $zero, stringloop		# Continue looping until quotient is 0
+bne $t2, $zero, stringloop		# Continue looping until quotient is 0
 
 finalexit: 
 
