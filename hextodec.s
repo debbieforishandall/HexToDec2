@@ -57,6 +57,10 @@ bne $s0, $t7, notnan
 li $v0, 4 						
 la $a0, nan						# Print NaN if so
 syscall
+# Print comma
+li $v0, 4 						
+la $a0, comma_string
+syscall
 addi $s4, $s5, 1
 j anotherloop
 
@@ -65,6 +69,12 @@ bne $s0, $t7, nottoolarge
 li $v0, 4 						
 la $a0, large					# Print too large if so
 syscall
+
+# Print comma
+li $v0, 4 						
+la $a0, comma_string
+syscall
+
 addi $s4, $s5, 1
 j anotherloop
  
@@ -147,12 +157,14 @@ jr $ra							# Exit function
 # Called by: main
 # Calls: hex_funct
 hex_string:
+addi $t6, $zero, 0				# Initialize $t6 to 0
+
 add $t9, $a0, $zero				# Load address of string from argument
 lbu $t2, 0($t9)					# Load character at $t9
 addi $t1, $zero, 0				# initialize counter $t1 to zero
 add $t5, $ra, $zero 			# Store the value in $ra into $t5
 
-sp: addi $t7, $zero, 32			# Store 32 - ascii space in $t7
+sp: 
 addi $t7, $zero, 44				# Store 44 - ascii comma in $t7
 bne $t2, $t7, notcomma1			# Check if comma
 gotofinish:
@@ -170,6 +182,7 @@ bne $t2, $zero, notnull1			# Check if null
 j gotofinish
 
 notnull1:
+addi $t7, $zero, 32			# Store 32 - ascii space in $t7
 bne $t2, $t7, loop				# If not space branch to loop
 addi $t9, $t9, 1				
 lbu $t2, 0($t9)					# Load the next charcter
@@ -180,11 +193,37 @@ add $a0, $zero,  $t2			# Initialize values for function: hex_funct
 jal hex_funct
 addi $t7, $zero, 1				# Set temporary variable to 1
 sub $t3, $zero, $t7				# Set temporary variable to -1
-bne $v0, $t3, valid				# Check whether $v0 is not equal to -1
+bne $v0, $t3, checkspace		# Check whether $v0 is not equal to -1
 
 addi $t7, $zero, 1
 sub $t6, $zero, $t7				# the input character is not a hex value, set return value to -1
 j finish						# exit subfunction
+
+checkspace:						# Check if space
+addi $t7, $zero, 2
+sub $t3, $zero, $t7
+bne $v0, $t3, valid
+
+addi $t9, $t9, 1				
+lbu $t2, 0($t9)					# Load the next charcter
+addi $t7, $zero, 32
+bne $t2, $t7, notspace
+j checkspace
+
+notspace:						# If character after space is not space, check if comma
+addi $t7, $zero, 44
+bne $t2, $t7, notcomma2
+j finish						# If character after space is comma, valid, go to finish
+
+notcomma2:
+addi $t7, $zero, 10
+bne $t2, $t7, notenter2
+j finish
+
+notenter2:
+bne $t2, $zero, gotofinish
+j finish
+
 
 valid: add $t0, $v0, $zero
 bne $t1, $zero, else			# If it's the first number, don't shift the register
@@ -224,15 +263,22 @@ jr $ra
 #
 # Pre: none
 # Post: $v0 contains the return value
-# Returns: the value of the hex, -1 if not valid
+# Returns: the value of the hex, -1 if not valid, -2 if space
 #
 # Called by: hex_string
 # Calls: none
 hex_funct:	
 addi $t7, $zero, 1								
 sub $v0, $zero, $t7				# Initialize $v0 to -1
-addi $t6, $zero, 0				# Initialize $t6 to 0
 
+addi $t7, $zero, 32
+bne $a0, $t7, start
+
+addi $t7, $zero, 2				# If ascii character is space, return -2
+sub $v0, $zero, $t7
+jr $ra
+
+start:
 li $t0, 48						# Initialize lower bound for the ascii range 0 - 9
 li $t2, 58						# Initialize upper bound the ascii range 0 - 9
 add $t3, $t0, $zero				# t3 is the value to be subtracted from the ascii value to get its value in hex
