@@ -238,17 +238,21 @@ addi $t1, $t1, 1				# Update the counter
 
 addi $t9, $t9, 1
 lbu $t2, 0($t9)					# Load the next  character
+
+addi $t8, $zero, 9				# if counter is 9, hex is too large
+bne $t1, $t8, checkfinish
+addi $t7, $zero, 2				# Set return value to 2
+sub $t6, $zero, $t7	
+j finish
+
+checkfinish:
 beq $t2, $zero, finish 			# Exit loop when next character in string is null
 addi $t8, $zero, 10
 beq $t2, $t8, finish			# Exit loop when next character in string is enter
 addi $t8, $zero, 44
 beq $t2, $t8, finish 			# Exit loop when next character in string is comma
 
-addi $t8, $zero, 9				# if counter is 9, hex is too large
-bne $t1, $t8, loop
-addi $t7, $zero, 2				# Set return value to 2
-sub $t6, $zero, $t7	
-j finish
+j loop
 
 finish:
 addi $sp, $sp, -4				# Decrement stack pointer by 4
