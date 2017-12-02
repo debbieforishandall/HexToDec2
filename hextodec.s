@@ -188,6 +188,11 @@ j gotofinish
 
 notnull1:
 addi $t7, $zero, 32			# Store 32 - ascii space in $t7
+bne $t2, '\t', nottab
+addi $t9, $t9, 1				
+lbu $t2, 0($t9)					# Load the next charcter
+j sp							# Repeat until character is not tab
+nottab:
 bne $t2, $t7, loop				# If not space branch to loop
 addi $t9, $t9, 1				
 lbu $t2, 0($t9)					# Load the next charcter
@@ -211,6 +216,11 @@ bne $v0, $t3, valid
 
 addi $t9, $t9, 1				
 lbu $t2, 0($t9)					# Load the next charcter
+
+bne $t2, '\t', nottab1
+j checkspace
+
+nottab1:
 addi $t7, $zero, 32
 bne $t2, $t7, notspace
 j checkspace
@@ -281,8 +291,13 @@ addi $t7, $zero, 1
 sub $v0, $zero, $t7				# Initialize $v0 to -1
 
 addi $t7, $zero, 32
-bne $a0, $t7, start
+bne $a0, $t7, checktab
+j isspace
 
+checktab:
+bne $a0, '\t', start			# If ascii character is tab, return -2
+
+isspace:
 addi $t7, $zero, 2				# If ascii character is space, return -2
 sub $v0, $zero, $t7
 jr $ra
