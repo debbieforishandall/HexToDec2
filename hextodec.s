@@ -66,6 +66,8 @@ addi $s4, $s5, 1
 j anotherloop
 
 notnan:							# Check that returned value is not too large
+addi $t7, $zero, 2
+sub  $t7, $zero, $t7
 bne $s0, $t7, nottoolarge
 li $v0, 4 						
 la $a0, large					# Print too large if so
