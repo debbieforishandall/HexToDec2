@@ -13,6 +13,8 @@ buffer: .space 11	# buffer string to store decimal string
 main:
 addi $s0, $zero, 0    			# Initialize $s0
 
+addi $s1, $zero, 0				# Initialize $s1
+
 li $v0, 8 						# Read in hexadecimal numbers
 la $a0, str2
 li $a1, 1000					# of size 1000 
@@ -27,10 +29,21 @@ add $s5, $s4, $zero				# Copy the address of str2 to $s5
 
 lbu $t3, 0($s5)					# Load character at $s5
 bne $t3, $zero, checkenter		# Exit loop if the null character is encountered
+bne $s1, 1, continue			# Check if previous character was comma
+# Print NaN
+li $v0, 4 						
+la $a0, nan						# Print NaN if so
+syscall
 j continue
+
 checkenter:
 addi $t7, $zero, 10 
 bne $t3, $t7, innerloop			# Exit loop if enter character is encountered
+bne $s1, 1, continue			# Check if previous character was comma
+# Print NaN
+li $v0, 4 						
+la $a0, nan						# Print NaN if so
+syscall
 j continue
 
 innerloop:
@@ -46,6 +59,7 @@ addi $s6, $zero, 1				# Add a check to indicate that zero denoting end of input 
 j equalenter
 notzero:
 bne $t3, $t7, notcomma			# Check if the ascii value is comma
+addi $s1, $zero, 1				# Add a check to indicate last value encountered was comma
 equalenter: 
 add $a0, $s4, $zero				# Add address of string to argument for hex_string function
 jal hex_string					# Call function to convert hexadecimal string to integer
@@ -96,6 +110,7 @@ syscall
 addi $s4, $s5, 1
 j anotherloop
 notcomma:
+addi $s1, $zero, 0				# Add a check that the last character encountered was not comma
 addi $s5, $s5, 1				# Check the next value
 j innerloop	
 
