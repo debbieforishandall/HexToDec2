@@ -61,8 +61,8 @@ notzero:
 bne $t3, $t7, notcomma			# Check if the ascii value is comma
 addi $s1, $zero, 1				# Add a check to indicate last value encountered was comma
 equalenter: 
-add $a0, $s4, $zero				# Add address of string to argument for hex_string function
-jal hex_string					# Call function to convert hexadecimal string to integer
+add $a0, $s4, $zero				# Add address of string to argument for subprogram_2 function
+jal subprogram_2				# Call function to convert hexadecimal string to integer
 lw $s0, 0($sp)					# Copy return value from stack to $s0
 
 addi $t8, $zero, 1				# Check that returned value is not NaN
@@ -98,7 +98,7 @@ j anotherloop
  
 nottoolarge:
 #addi $sp, $sp, 4				# Increment stack pointer by 4
-jal print_decimal 				# Print decimal string
+jal subprogram_3 				# Print decimal string
 
 # Print comma
 print_comma:
@@ -120,7 +120,7 @@ continue:						# Exit anotherloop
 li $v0, 10 						# Exit Program
 syscall
 
-########################################print_decimal
+########################################subprogram_3
 # Function prints unsigned decimal value of argument
 #
 # Arg registers used: none
@@ -132,7 +132,7 @@ syscall
 #
 # Called by: main
 # Calls: none
-print_decimal:
+subprogram_3:
 la $t0, buffer
 
 lw $t2, 0($sp)					# Copy argument from stack
@@ -164,7 +164,7 @@ syscall
 
 jr $ra							# Exit function
 
-########################################hex_string
+########################################subprogram_2
 # Function returns decimal value of an hexadecimal string
 #
 # Arg registers used: $a0
@@ -175,8 +175,8 @@ jr $ra							# Exit function
 # Returns: the value of the hex, -1 if not valid, -2 if too large
 #
 # Called by: main
-# Calls: hex_funct
-hex_string:
+# Calls: subprogram_1
+subprogram_2:
 addi $t6, $zero, 0				# Initialize $t6 to 0
 
 add $t9, $a0, $zero				# Load address of string from argument
@@ -214,8 +214,8 @@ lbu $t2, 0($t9)					# Load the next charcter
 j sp							# Repeat until character is not space
 
 loop: 
-add $a0, $zero,  $t2			# Initialize values for function: hex_funct
-jal hex_funct
+add $a0, $zero,  $t2			# Initialize values for function: subprogram_1
+jal subprogram_1
 addi $t7, $zero, 1				# Set temporary variable to 1
 sub $t3, $zero, $t7				# Set temporary variable to -1
 bne $v0, $t3, checkspace		# Check whether $v0 is not equal to -1
@@ -259,7 +259,7 @@ valid: add $t0, $v0, $zero
 bne $t1, $zero, else			# If it's the first number, don't shift the register
 j both
 else: sll $t6, $t6, 4   		# Shift register that stores the decimal number by 4
-both: add $t6, $t6, $t0			# Add the new decimal returned by hex_funct to the number
+both: add $t6, $t6, $t0			# Add the new decimal returned by subprogram_1 to the number
 
 addi $t1, $t1, 1				# Update the counter
 
@@ -289,7 +289,7 @@ add $ra, $t5, $zero				# Reload $ra from t5
 jr $ra
 
 
-########################################hex_funct
+########################################subprogram_1
 # Function returns decimal value of a single hexadecimal value using ascii ranges
 #
 # Arg registers used: $a0
@@ -299,9 +299,9 @@ jr $ra
 # Post: $v0 contains the return value
 # Returns: the value of the hex, -1 if not valid, -2 if space
 #
-# Called by: hex_string
+# Called by: subprogram_2
 # Calls: none
-hex_funct:	
+subprogram_1:	
 addi $t7, $zero, 1								
 sub $v0, $zero, $t7				# Initialize $v0 to -1
 
